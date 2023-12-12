@@ -1,0 +1,258 @@
+#include <iostream>
+#include <stdexcept>
+#include <cstdlib> // для использования функции rand()
+#include <sstream> // для использования std::stringstream
+
+struct Node {
+    std::string surname;
+    std::string name;
+    int course;
+    float averageGrade;
+    Node* next;
+
+    Node(const std::string& sur, const std::string& nm, int crs, float grade)
+        : surname(sur), name(nm), course(crs), averageGrade(grade), next(nullptr) {}
+};
+
+class LinkedList {
+private:
+    Node* head;
+
+public:
+    LinkedList() : head(nullptr) {}
+
+    LinkedList(const LinkedList& other) {
+        copyList(other);
+    }
+
+    LinkedList(int numStudents) : head(nullptr) {
+        for (int i = 0; i < numStudents; ++i) {
+            std::string surname = "Surname" + intToString(i + 1);
+            std::string name = "Name" + intToString(i + 1);
+            int course = rand() % 5 + 1;
+            float grade1 = (rand() % 6);
+            float grade2 = (rand() % 6);
+            float grade3 = (rand() % 6);
+            float averageGrade = (grade1 + grade2 + grade3) / 3.0;
+
+            push_tail(surname, name, course, averageGrade);
+        }
+    }
+
+    ~LinkedList() {
+        clear();
+    }
+
+    LinkedList& operator=(const LinkedList& other) {
+        if (this != &other) {
+            clear();
+            copyList(other);
+        }
+        return *this;
+    }
+
+    void push_tail(const std::string& sur, const std::string& nm, int crs, float grade) {
+        Node* newNode = new Node(sur, nm, crs, grade);
+
+        if (!head) {
+            head = newNode;
+            head->next = head;
+        }
+        else {
+            Node* temp = head;
+            while (temp->next != head) {
+                temp = temp->next;
+            }
+            temp->next = newNode;
+            newNode->next = head;
+        }
+    }
+
+
+
+    void push_tail(const LinkedList& other) {
+        Node* temp = other.head;
+        do {
+            push_tail(temp->surname, temp->name, temp->course, temp->averageGrade);
+            temp = temp->next;
+        } while (temp != other.head);
+    }
+
+    void push_head(const std::string& sur, const std::string& nm, int crs, float grade) {
+        Node* newNode = new Node(sur, nm, crs, grade);
+
+        if (!head) {
+            head = newNode;
+            head->next = head;
+        }
+        else {
+            Node* temp = head;
+            while (temp->next != head) {
+                temp = temp->next;
+            }
+            temp->next = newNode;
+            newNode->next = head;
+            head = newNode;
+        }
+    }
+
+    void push_head(const LinkedList& other) {
+        Node* temp = other.head;
+        do {
+            push_head(temp->surname, temp->name, temp->course, temp->averageGrade);
+            temp = temp->next;
+        } while (temp != other.head);
+    }
+
+    void pop_head() {
+        if (!head) {
+            return;
+        }
+
+        if (head->next == head) {
+            delete head;
+            head = nullptr;
+        }
+        else {
+            Node* temp = head;
+            while (temp->next != head) {
+                temp = temp->next;
+            }
+            temp->next = head->next;
+            delete head;
+            head = temp->next;
+        }
+    }
+
+    void pop_tail() {
+        if (!head) {
+            return;
+        }
+
+        if (head->next == head) {
+            delete head;
+            head = nullptr;
+        }
+        else {
+            Node* temp = head;
+            while (temp->next->next != head) {
+                temp = temp->next;
+            }
+            delete temp->next;
+            temp->next = head;
+        }
+    }
+
+    void delete_node(const float& value) {
+        if (!head) {
+            return;
+        }
+
+        Node* current = head;
+        Node* prev = nullptr;
+
+        do {
+            if (current->averageGrade == value) {
+                if (prev) {
+                    prev->next = current->next;
+                    delete current;
+                    current = prev->next;
+                }
+                else {
+                    pop_head();
+                    current = head;
+                }
+            }
+            else {
+                prev = current;
+                current = current->next;
+            }
+        } while (current != head);
+    }
+
+    void clear() {
+        while (head) {
+            pop_head();
+        }
+    }
+
+    void copyList(const LinkedList& other) {
+        if (other.head) {
+            Node* temp = other.head;
+            do {
+                push_tail(temp->surname, temp->name, temp->course, temp->averageGrade);
+                temp = temp->next;
+            } while (temp != other.head);
+        }
+    }
+
+    float calculateAverage() const {
+        if (!head) {
+            return 0.0;
+        }
+
+        Node* temp = head;
+        float sum = 0.0;
+        int count = 0;
+
+        do {
+            sum += temp->averageGrade;
+            temp = temp->next;
+            ++count;
+        } while (temp != head);
+
+        return sum / count;
+    }
+
+    Node* getHead() const {
+        return head;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const LinkedList& list) {
+        if (!list.head) {
+            os << "List is empty.\n";
+            return os;
+        }
+
+        Node* temp = list.head;
+        do {
+            os << temp->surname << " " << temp->name << " " << temp->course << " " << temp->averageGrade << std::endl;
+            temp = temp->next;
+        } while (temp != list.head);
+
+        return os;
+    }
+
+private:
+    // Метод для конвертации int в string с использованием std::stringstream
+    std::string intToString(int value) const {
+        std::stringstream ss;
+        ss << value;
+        return ss.str();
+    }
+};
+
+int main() {
+    LinkedList studentsList(10);
+    studentsList.push_tail("NewSurname", "NewName", 3, 4.5);
+    studentsList.pop_head();
+    studentsList.push_head("Artanov", "Aleksandr", 2, 3);
+    studentsList.pop_tail(); 
+    studentsList.pop_tail();
+    LinkedList groupList;
+    groupList.push_head("Nikitenko", "Motya", 2, 4);
+    groupList.push_tail("Nikitenko", "Motya", 2, 3);
+    groupList.push_head("Nikitenko", "Motya", 2, 5);
+
+    std::cout << "Student data:\n" << groupList;
+    std::cout << "Average grade for the group: " << groupList.calculateAverage() << "\n" << std::endl;
+
+    std::cout << "Student data:\n" << studentsList;
+    std::cout << "Average grade for the group: " << studentsList.calculateAverage() << "\n" << std::endl;
+
+    groupList.push_tail(studentsList);
+
+    std::cout << "Student data:\n" << groupList;
+    std::cout << "Average grade for the group: " << groupList.calculateAverage() << std::endl;
+    return 0;
+}
