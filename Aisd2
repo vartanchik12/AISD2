@@ -69,14 +69,20 @@ public:
     }
 
 
-
     void push_tail(const LinkedList& other) {
+        if (!other.head) {
+            // Если other - пустой список, ничего не делаем
+            return;
+        }
+
         Node* temp = other.head;
         do {
             push_tail(temp->surname, temp->name, temp->course, temp->averageGrade);
             temp = temp->next;
         } while (temp != other.head);
     }
+
+
 
     void push_head(const std::string& sur, const std::string& nm, int crs, float grade) {
         Node* newNode = new Node(sur, nm, crs, grade);
@@ -96,13 +102,33 @@ public:
         }
     }
 
-    void push_head(const LinkedList& other) {
+   void push_head(const LinkedList& other) {
+        Node* temp = other.head;
+        LinkedList reverse;
+        while (temp != nullptr) {
+            reverse.push_head(temp->surname, temp->name, temp->course, temp->averageGrade);
+            temp = temp->next;
+            if (temp == other.head) {
+                break;
+            }
+        }
+        Node* ntemp = reverse.head;
+        while (ntemp != nullptr) {
+            this->push_head(ntemp->surname, ntemp->name, ntemp->course, ntemp->averageGrade);
+            ntemp = ntemp->next;
+            if (ntemp == reverse.head) {
+                break;
+            }
+        }
+    }
+
+    /*void push_head(const LinkedList& other) {
         Node* temp = other.head;
         do {
             push_head(temp->surname, temp->name, temp->course, temp->averageGrade);
             temp = temp->next;
         } while (temp != other.head);
-    }
+    }*/
 
     void pop_head() {
         if (!head) {
@@ -186,23 +212,7 @@ public:
         }
     }
 
-    float calculateAverage() const {
-        if (!head) {
-            return 0.0;
-        }
 
-        Node* temp = head;
-        float sum = 0.0;
-        int count = 0;
-
-        do {
-            sum += temp->averageGrade;
-            temp = temp->next;
-            ++count;
-        } while (temp != head);
-
-        return sum / count;
-    }
 
     Node* getHead() const {
         return head;
@@ -232,27 +242,50 @@ private:
     }
 };
 
+float calculateAverage(const LinkedList& other) {
+    if (!other.getHead()) {
+        return 0.0;
+    }
+
+    Node* temp = other.getHead();
+    float sum = 0.0;
+    int count = 0;
+
+    do {
+        sum += temp->averageGrade;
+        temp = temp->next;
+        ++count;
+    } while (temp != other.getHead());
+
+    return sum / count;
+}
+
 int main() {
     LinkedList studentsList(10);
     studentsList.push_tail("NewSurname", "NewName", 3, 4.5);
     studentsList.pop_head();
     studentsList.push_head("Artanov", "Aleksandr", 2, 3);
-    studentsList.pop_tail(); 
+    studentsList.pop_tail();
     studentsList.pop_tail();
     LinkedList groupList;
     groupList.push_head("Nikitenko", "Motya", 2, 4);
-    groupList.push_tail("Nikitenko", "Motya", 2, 3);
-    groupList.push_head("Nikitenko", "Motya", 2, 5);
+    groupList.push_tail("Kudashev", "Nikita", 2, 3);
+    groupList.push_head("Ilienko", "Senya", 2, 5);
 
     std::cout << "Student data:\n" << groupList;
-    std::cout << "Average grade for the group: " << groupList.calculateAverage() << "\n" << std::endl;
+    std::cout << "Average grade for the group: " << calculateAverage(groupList) << "\n" << std::endl;
 
     std::cout << "Student data:\n" << studentsList;
-    std::cout << "Average grade for the group: " << studentsList.calculateAverage() << "\n" << std::endl;
+    std::cout << "Average grade for the group: " << calculateAverage(studentsList) << "\n" << std::endl;
+
+    studentsList.push_head(groupList);
+
+    std::cout << "Student data:\n" << studentsList;
+    std::cout << "Average grade for the group: " << calculateAverage(studentsList) << "\n" << std::endl;
 
     groupList.push_tail(studentsList);
-
+    
     std::cout << "Student data:\n" << groupList;
-    std::cout << "Average grade for the group: " << groupList.calculateAverage() << std::endl;
+    std::cout << "Average grade for the group: " << calculateAverage(groupList) << std::endl;
     return 0;
 }
